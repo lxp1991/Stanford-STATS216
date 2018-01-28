@@ -1,0 +1,161 @@
+---
+title: "Statistics 216 Homework 1"
+author: "Xiangpeng Li"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+#### 1. Which statistical learning method is performing better? flexible method or inflexible method.
+##### (a) The number of observations `n` is extremely large, and the number of predictiors `p` is small  
+    Flexible method is better, because given a large set of sample size we can make use of it to train the model
+
+##### (b) The number of predictors `p` is extremely large, and the number of observations `n` is small  
+    Inflexible method is better, because flexible method may overfit the sample data.
+
+##### (c) The variance of the error terms, i.e. $\sigma^2 = Var(\epsilon)$, is extremely high  
+    Inflexible method is better, because flexible method will overfit a lot error instead of real values.
+
+##### (d) The relationship between the predictors and response is highly non-linear, and $\sigma^2$ is small  
+    Flexible method is better, since the relationship is non-linear, introducing a inflexible method will cause a higher bias.
+
+##### (e) The relationship between the predictors and response is highly non-linear, and $\sigma^2$ is large  
+    It depends on how relatively non-linear and how relatively large $\sigma^2$ is. Flexible method will work better in non-linear relationship but a high $\sigma^2$ will introduce too much noise.
+    
+    
+    
+#### 2. Explain whether each scenario below is a regression, classification or unsupervised learning problem, and indicate whether we are most interested in inference or prediction. Finally, provide `n` and `p`.
+##### (a) We collect a set of data on the top 500 firms in the US. For each firm we record profit, number of employees, industry and the CEO salary. We are interested in understanding which factors affect CEO salary
+    Regression, inference, n = 500, p = 3  
+    
+##### (b) Our website has collected the ratings of 1000 different restaurants by 10,000 customers. Each customer has rated about 100 restaurants, and we would like to recommend restaurants to customers who have not yet been there.  
+    Classification, prediction, n = 10,000 * 100 = 1,000,000, p = 1  
+    
+##### (c) We are considering launching a new product and wish to know whether it will be a success or a failure. We collect data on 20 similar products that were previously launched. For each product we have recorded whether it was a success or failure, price charged for the product, marketing budget, competition price, and ten other variables.  
+    Classification, prediction, n = 20, p = 13  
+    
+##### (d) We are interesting in predicting the % change in the US dollar in relation to the weekly changes in the world stock markets. Hence we collect weekly data for all of 2012. For each week we record the % change in the dollar, the % change in the US market, the % change in the British market, and the % change in the German market. 
+    Regression, prediction, n = 52, p = 3
+    
+
+#### 3. In this next question we consider some real-life applications of statistical learning
+##### (a) 
+    1). A shopping mall wants to predict whether male or female is going to spend more money during shopping. They record last 5 years sales, shopping frequency, time. All those data are per gender.
+        Response: male or female  
+        Predictors: sales, shopping frequency, time  
+        Goal: Prediction  
+    2). A rating agency will rate a stock between AAA to DDD. In order to do that they record the company sales, number of employees, previous ratings in 5 years. 
+        Response: ratings  
+        Predictors: company sales, number of employees, previous ratings  
+        Goal: prediction  
+    3). Whether my application to Stanford University will be approved or rejected. 
+        Response: Approve or reject  
+        Predictors: GPA, working experience, research experience  
+        Goal: prediction  
+##### (b) 
+    1). A fast-food restaurant wants to predict how much revenue they can make in the next year. They collect last year weekly records. For each week it has advertising cost, personnel cost, material cost and revenue.  
+        Response: next year revenue  
+        Predictors: advertising cost, personnel cost, material cost  
+        Goal: prediction  
+    2). Youtube wants to know which factors impact on the time people spending on a video. They have 10000 video sample. For each video they collect the category of that video, length of video, whether they have inserted ads in between, number of subscriber of that youbuter.   
+        Response: time spent on a video  
+        Predictors: the category of that video, length of video, whether they have inserted ads, number of subscriber of a youbuter  
+        Goal: Inference  
+    3). Birth rate in U.S  
+        Response: Birth Rate  
+        Predictors: number of hospitals, number of people who are married, house income  
+        Goal: prediction
+##### (c) 
+    1). Banks want to find divide their credit card holders into different groups based on their spending behaviors such as monthly balance, FICO scores, income.  
+    2). A restaurant wants to divide their customer into different groups based on their food preference, time spent during restaurant, gender.  
+    3). A univertisy wants to cluster their students into different group based on their GPA, major, research experience." 
+
+#### 4. This exercise relates to the College data set, which can be found in the file College.csv. It contains a number of variables for 777 different universities and colleges in the US.
+```{r}
+setwd("D:/One Drive/OneDrive/Document/Study/Stanford/Introduction to Statistical Learning/homework/hw1")
+college = read.csv("college.csv")
+rownames(college)=college[,1]
+college=college[,-1]
+summary(college)
+pairs(college[, 1:10])
+plot(college$Private, college$Outstate, xlab = "Private", ylab = "Outstate")
+Elite = rep("No",nrow(college))
+Elite[college$Top10perc >50] = "Yes"
+Elite = as.factor(Elite)
+college = data.frame(college ,Elite)
+summary(college$Elite)
+plot(college$Elite, college$Outstate, xlab = "Elite", ylab = "Outstate")
+par(mfcol = c(2, 2))
+hist(college$Grad.Rate, xlab = "Grad Rate", ylab = "Frequency")
+hist(college$Expend, xlab = "Expend", ylab = "Frequency")
+hist(college$PhD, xlab = "PhD", ylab = "Frequency")
+hist(college$Personal, xlab = "Personal", ylab = "Frequency")
+```  
+
+
+
+
+#### 5. In this exercise, we will predict the number of applications received using the other variables in the College data set 
+##### (a)
+
+```{r warning=FALSE}
+indices <- split(sample(nrow(college), nrow(college), replace=FALSE), as.factor(1:2))
+trainingSet = college[indices[[1]], ]
+testSet = college[-indices[[1]], ]
+```
+
+##### (b)
+```{r warning=FALSE}
+fit <- lm(Apps ~ . - Accept - Enroll - Elite, data = trainingSet)
+summary(fit)
+```
+We are using `training MSE` and `test MSE` to measure the quality of fit.
+```{r}
+trainingMSE = mean(fit$residuals^2)
+testMSE = mean((testSet$Apps - predict.lm(fit, testSet)) ^ 2)
+summary(trainingMSE)
+summary(testMSE)
+```
+
+##### (c)
+    As we can see above `testMSE` and `trainingMSE` have large numbers. Also $R^2$ is 0.8105 using this linear model. We can conclude that linear model does not fit this data very well. However F-statistic is 106.4 which is far more than 1, it suggests at least one of the factors must be related to `Apps`.  
+    `F.Undergrad`, `Room.Board`, `Grad.Rate` and `Private - Yes` have the smallest p-values and are the most important factors. `Top10prec`, `perc.alumni` and `Expend` are the tier 2 important factors.
+
+#### 6. Using the same setup as in the previous question, form a new outcome variable Y which equals one if the number of applications is greater than or equal to the overall median and zero otherwise. Fit a logistic regression model to Y and report the training and test misclassification rates, and the most important predictors. As above, do not include the Elite predictor, or the Accept or Enrol predictors in the regression. Compare the results of this analysis to that of the linear regression approach in the previous question.
+```{r warning=FALSE}
+med = median(college$Apps)
+Y = rep(0, nrow(college))
+Y[college$Apps >= med] = 1
+Y = as.factor(Y)
+college = data.frame(college, Y)
+
+## exlcude unwanted factors
+college = subset(college, select = -c(Accept, Enroll, Elite, Apps))
+
+indices <- split(sample(nrow(college), nrow(college), replace=FALSE), as.factor(1:2))
+trainingSet = college[indices[[1]], ]
+testSet = college[-indices[[1]], ]
+fit <- glm(formula = Y ~ ., family = binomial, data = trainingSet)
+summary(fit)
+
+## calculate training misclassification rate
+trainingProbs = predict(fit, type = "response")
+trainingPred = rep(0, nrow(trainingSet))
+trainingPred[trainingProbs > 0.5] = 1
+table(trainingPred, trainingSet$Y)
+
+## training misclassification rate
+1 - mean(trainingPred == trainingSet$Y)
+
+
+## calculate test misclassification rate
+testProbs = predict(fit, newdata = testSet, type = "response")
+testPred = rep(0, nrow(testSet))
+testPred[testProbs > 0.5] = 1
+table(testPred, testSet$Y)
+
+## test misclassification rate
+1 - mean(testPred == testSet$Y)
+```
+    The error rates for training set and test set are both at range 6% - 9% which fits better than the linear model. The most important factors are `F.Undergrad`, `Outstate` and `Grad.Rate`. Compared to linear model they both have `F.undergrad` and `Grad.Rate` so we can conclude these two factors are most important to the `Apps`
+  
