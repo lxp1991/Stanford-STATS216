@@ -1,9 +1,6 @@
 ---
 title: "Statistics 216 Homework 1"
 author: "Xiangpeng Li"
-output:
-  word_document: default
-  pdf_document: default
 ---
 
 #### 1. Which statistical learning method is performing better? flexible method or inflexible method.
