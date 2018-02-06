@@ -10,25 +10,41 @@ knitr::opts_chunk$set(echo = TRUE)
 
 1. Suppose we collect data for a group of students in a statistics class with variables $X_1 =$ hours studied, $X_2 =$ undergrad GPA, and $Y =$ receive an A. We fit a logistic regression and produce estimated coefficient, $\hat{\beta}_0 = -5$, $\hat{\beta}_1 = 0.075$, $\hat{\beta}_2 = 1.1$.  
 
-    (a) Estimate the probability that a student who studies for 40 hours and has an undergrad GPA of 3.5 gets an A in the class.  
+    (a) Estimate the probability that a student who studies for 40 hours and has an undergrad GPA of 3.5 gets an A in the class.
+    
+        We define the multiple linear model as $$ log(\frac{p(X)}{1 - P(X)}) = {\beta}_0 + {\beta}_1 * X_1 + {\beta}_2 * X_2$$
+        
+        Then we can plug in these estimate values, we can get $log(\frac{p(X)}{1 - P(X)}) = -5 + 0.075 * 40 + 1.1 * 3.5 = 1.85$ and we take the logarithm on both side we get $\frac{p(X)}{1 - p(X)}$ = 6.35982, so $P(X) = 0.864$
 
     (b) How many hours would the student in part (a) need to study to have a 50% chance of getting an A in the class?  
+    
+        $0.5 = \frac{e^{-5 + 0.075 * X_1 + 1.1 * X_2}}{1 + e^{-5 + 0.075 * X_1 + 1.1 * X_2}}$, 
+        
+        so $e^{-5 + 0.075 * X_1 + 1.1 * X_2} = 1, -5 + 0.075 * X_1 + 1.1 * X_2 = 0, X_2 = 3.5$ we can get $X_1 = 15.3$
 
 2. Suppose we estimate the regression coefficients in a linear regression model by minimizing
 \[ \sum_{i=1}^n \left( y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij} \right)^2 \quad \text{subject to}\quad \sum_{j=1}^p |\beta_j| \leq s \]
 for a particular value of $s$. For parts (a) through (e), indicate which of i. through v. is correct. Justify your answer.  
 
     (a) As we increase $s$ from 0, the training RSS will:  
-        i. Increase initially, and then eventually start decreasing in an inverted U shape.  
-        ii. Decrease initially, and then eventually start increasing in a U shape.  
-        iii. Steadily increase.  
-        iv. Steadily decrease.  
-        v. Remain constant.  
+        
+        Streadily decrease. As we loosen the restriction on the coefficients, the model will fit the the training set more and more which will decrease the RSS.  
     
     (b) Repeat (a) for test RSS.  
+        
+        Decrease initially, and then eventually start increaseing in a U shape. First the RSS will decrease because as the model becomes more flexible and it will hit a minimal point, then the RSS will increase because model tends to overfit the training set and variance start to play an important part of the total error.
+
     (c) Repeat (a) for variance.  
+    
+        Steadily increase. According to the bias-variance trade off, A more flexible model will have a higher variance. When we increase $s$ from 0, the flexiblity is increasing, thus the variance is increasing.
+        
     (d) Repeat (a) for (squared) bias.  
+    
+        Steadily decrease. According to the bias-variance trade off, A more flexible model will have a lower bias. When we increase $s$ from 0, the model is becoming more flexible, thus the bias is decreasing.
+        
     (e) Repeat (a) for the irreducible error.  
+    
+        Remain constant. No matter how perfect our estimation is, there is still some error in it and cannot be reduced by model.
 
 3. Suppose that we use some statistical learning method to make a prediction for the response $Y$ for a particular value of the predictor $X = x$. Carefully describe how we might estimate a confidence interval for (a) our prediction of $Y$ at $x$ and (b) the $E(Y |X = x)$.  
 
@@ -39,6 +55,9 @@ Remember that the estimates $\hat{\beta}_0$ and $\hat{\beta}_1$ maximize the lik
 for the observed data $\{(x_i, y_i)\}_{i=1}^n$.  
 
     (a) Show that the likelihood function $L(\beta_0, \beta_1)$ is always strictly less than 1.  
+    
+        Since $p(x_i)$ denotes the probability of the response of the $i^{th}$ observation, it can only be between 0 and 1. The likelihood function is the product of two cumulative product, and each value is between 0 and 1, so the final result will always in range of 0 and 1.
+        
     (b) Suppose that all of the $x_i$ corresponding to $y_i = 0$ are negative, and all of the other $x_i$ are positive. In that case, show that we can get $L(\beta_0, \beta_1)$ arbitrarily close to 1. That is, show that for any value $a < 1$, no matter how close to 1, you can always find values $\beta_0$ and $\beta_1$ for which $L(\beta_0, \beta_1) > a$.  
     Explain why this means that $\hat{\beta}_0$ and $\hat{\beta}_1$ are undefined.  
     (c) Show that $\hat{\beta}_0$ and $\hat{\beta}_1$ are similarly undefined if there is *any* value $c$ for which every $x_i$ corresponding to $y_i = 0$ is less than $c$ and every other $x_i$ is larger than $c$. 
