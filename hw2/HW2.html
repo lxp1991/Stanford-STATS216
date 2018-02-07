@@ -171,8 +171,8 @@ You will probably get warning messages that the fit didnât converge, and th
 <pre class="r"><code>require(ISLR)</code></pre>
 <pre><code>## Loading required package: ISLR</code></pre>
 <pre class="r"><code>attach(Weekly)
-fit &lt;- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, family = binomial)
-summary(fit)</code></pre>
+glm.fit &lt;- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, family = binomial)
+summary(glm.fit)</code></pre>
 <pre><code>## 
 ## Call:
 ## glm(formula = Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + 
@@ -201,17 +201,65 @@ summary(fit)</code></pre>
 ## AIC: 1500.4
 ## 
 ## Number of Fisher Scoring iterations: 4</code></pre>
-<pre><code>(b) Use the following code to produce the confusion matrix for this problem.  
-```R
-glm.probs = predict(glm.fit, type = &quot;response&quot;)
+<p><span class="math inline">\(Log2\)</span> has the relatively smallest p-value and is more statistically significant than other variables.</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li><p>Use the following code to produce the confusion matrix for this problem.</p>
+<pre class="r"><code>glm.probs = predict(glm.fit, type = &quot;response&quot;)
 glm.pred = rep(&quot;Down&quot;, length(glm.probs))
 glm.pred[glm.probs &gt; 0.5] = &quot;Up&quot;
-table(glm.pred, Weekly$Direction)
-```
-Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.  
-(c) Now fit the logistic regression model using a training data period from 1990 to 2008, with `Lag1`, `Lag2`, and `Lag3` as the only predictors. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).  
-(d) Repeat (c) using LDA. Use `library(MASS)` to work with the `lda()` command.  
-(e) Repeat (c) using KNN with $K = 3$. Invoke `library(class)` to work with the `knn()` command. Set your seed to 2018 via `set.seed(2018)`.  
+table(glm.pred, Weekly$Direction)</code></pre>
+<p>Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.</p></li>
+</ol>
+<pre class="r"><code>glm.probs = predict(glm.fit, type = &quot;response&quot;)
+glm.pred = rep(&quot;Down&quot;, length(glm.probs))
+glm.pred[glm.probs &gt; 0.5] = &quot;Up&quot;
+table(glm.pred, Weekly$Direction)</code></pre>
+<pre><code>##         
+## glm.pred Down  Up
+##     Down   54  48
+##     Up    430 557</code></pre>
+<p>This matrix tell us the misclassification rate on the training data. The diagonal/anti-diagonal of the matrix is showing how many correct/wrong predictions we make on the training data.</p>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Now fit the logistic regression model using a training data period from 1990 to 2008, with <code>Lag1</code>, <code>Lag2</code>, and <code>Lag3</code> as the only predictors. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).</li>
+</ol>
+<pre class="r"><code>traingSet = subset(Weekly, Year %in% 1990: 2008)
+testSet = subset(Weekly, Year %in% 2009: 2010)
+# fit the logitics model
+glm.fit &lt;- glm(Direction ~ Lag1 + Lag2 + Lag3, data = traingSet, family = binomial)
+
+compute &lt;- function(fit, set) {
+  probs = predict(fit, newdata = set)
+  pred = rep(&quot;Down&quot;, length(probs))
+  pred[probs &gt; 0.5] = &quot;Up&quot;
+  table(pred, set$Direction)
+}
+# predict on the test set
+#compute(glm.fit, testSet)
+glm.probs = predict(glm.fit, testSet)
+glm.pred = rep(&quot;Down&quot;, length(glm.probs))
+glm.pred[glm.probs &gt; 0.5] = &quot;Up&quot;
+table(glm.pred, testSet$Direction)</code></pre>
+<pre><code>##         
+## glm.pred Down Up
+##     Down   39 56
+##     Up      4  5</code></pre>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Repeat (c) using LDA. Use <code>library(MASS)</code> to work with the <code>lda()</code> command.</li>
+</ol>
+<pre class="r"><code>library(MASS)
+lda.fit = lda(Direction ~ Lag1 + Lag2 + Lag3, data = traingSet)
+#compute(lda.fit, testSet)
+
+lda.pred = predict(lda.fit, testSet)
+lda.class = lda.pred$class
+#lda.pred = rep(&quot;Down&quot;, length(lda.probs))
+#lda.pred[lda.probs &gt; 0.5] = &quot;Up&quot;
+table(lda.class, testSet$Direction)</code></pre>
+<pre><code>##          
+## lda.class Down Up
+##      Down    8  9
+##      Up     35 52</code></pre>
+<pre><code>(e) Repeat (c) using KNN with $K = 3$. Invoke `library(class)` to work with the `knn()` command. Set your seed to 2018 via `set.seed(2018)`.  
 (f) Which of the models from parts (c), (d), and (e) appears to provide the best results on this data?  
 (g) What is one scenario in which you might expect an LDA model to outperform a logistic regression model?  
 (h) What is one scenario in which you might expect a KNN model to outperform a logistic regression model?</code></pre>
