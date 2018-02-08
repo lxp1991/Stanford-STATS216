@@ -48,6 +48,10 @@ for a particular value of $s$. For parts (a) through (e), indicate which of i. t
 
 3. Suppose that we use some statistical learning method to make a prediction for the response $Y$ for a particular value of the predictor $X = x$. Carefully describe how we might estimate a confidence interval for (a) our prediction of $Y$ at $x$ and (b) the $E(Y |X = x)$.  
 
+    (a) we can use the bootstrap. We repeatly sample observations from the original data set and each time we can compute the estimate value $\hat{\alpha}^{*B}$. After multiple times, we can get the mean of response and standard deviation. Based on these two parameters we can compute the confidence interval.
+    
+    (b) We random pick observations from the original data set to do the bootstrap and record the response and that specific value of predictor. After repeatint this process multiple times, we can compute the $E(Y |X = x)$ based on the records.
+
 4. Logistic regression can give poor results when the two classes can be perfectly separated by a linear decision boundary. Consider just a logistic regression with a single predictor, $X$, so that our model is
 \[ p(X) = \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}} \]  
 Remember that the estimates $\hat{\beta}_0$ and $\hat{\beta}_1$ maximize the likelihood function
@@ -132,16 +136,25 @@ mean(lda.class == testSet$Direction)
 ```{r}
 library(class)
 set.seed(2018)
-train.X = cbind(Lag1, Lag2, Lag3)[traingSet, ]
-test.X = cbind(Lag1, Lag2, Lag3)[testSet, ]
+train.X = traingSet[, c("Lag1", "Lag2", "Lag3")]
+test.X = testSet[, c("Lag1", "Lag2", "Lag3")]
 train.Direction = traingSet$Direction
 knn.pred = knn(train.X, test.X, train.Direction, k = 3)
-table(knn.pred, testSet)
+table(knn.pred, testSet$Direction)
+mean(knn.pred == testSet$Direction)
 ```
 
-    (f) Which of the models from parts (c), (d), and (e) appears to provide the best results on this data?  
-    (g) What is one scenario in which you might expect an LDA model to outperform a logistic regression model?  
-    (h) What is one scenario in which you might expect a KNN model to outperform a logistic regression model?
+  (f) Which of the models from parts (c), (d), and (e) appears to provide the best results on this data?  
+      
+      LDA has the best result of 0.5769231.
+      
+  (g) What is one scenario in which you might expect an LDA model to outperform a logistic regression model?  
+      
+      LDA assumes the observations are drawn from a Gaussian distribution with a common convariance matrix in each class, so if this assumeption is met, LDA will outperform a logistic regression model.
+      
+  (h) What is one scenario in which you might expect a KNN model to outperform a logistic regression model?
+  
+      Logistic model can only generate a linear boundary, so when the decision boundary is highly non-linear, the KNN will outperform a logistic regression model.
 
 6. **You may work in groups up to size 4 on this problem. If you do work in groups, write the names of all your group members on your problem set.**  
 In class, we fit a linear regression model to the NCAA data using the scores as a continuous response. $y_i$ represented the (possibly negative) margin of victory for the home team, and (including home court advantage) we modeled:

@@ -147,7 +147,11 @@ $(document).ready(function () {
 <li><p>Repeat (a) for the irreducible error.</p>
 <p>Remain constant. No matter how perfect our estimation is, there is still some error in it and cannot be reduced by model.</p></li>
 </ol></li>
-<li><p>Suppose that we use some statistical learning method to make a prediction for the response <span class="math inline">\(Y\)</span> for a particular value of the predictor <span class="math inline">\(X = x\)</span>. Carefully describe how we might estimate a confidence interval for (a) our prediction of <span class="math inline">\(Y\)</span> at <span class="math inline">\(x\)</span> and (b) the <span class="math inline">\(E(Y |X = x)\)</span>.</p></li>
+<li><p>Suppose that we use some statistical learning method to make a prediction for the response <span class="math inline">\(Y\)</span> for a particular value of the predictor <span class="math inline">\(X = x\)</span>. Carefully describe how we might estimate a confidence interval for (a) our prediction of <span class="math inline">\(Y\)</span> at <span class="math inline">\(x\)</span> and (b) the <span class="math inline">\(E(Y |X = x)\)</span>.</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>we can use the bootstrap. We repeatly sample observations from the original data set and each time we can compute the estimate value <span class="math inline">\(\hat{\alpha}^{*B}\)</span>. After multiple times, we can get the mean of response and standard deviation. Based on these two parameters we can compute the confidence interval.</p></li>
+<li><p>We random pick observations from the original data set to do the bootstrap and record the response and that specific value of predictor. After repeatint this process multiple times, we can compute the <span class="math inline">\(E(Y |X = x)\)</span> besed on the records.</p></li>
+</ol></li>
 <li><p>Logistic regression can give poor results when the two classes can be perfectly separated by a linear decision boundary. Consider just a logistic regression with a single predictor, <span class="math inline">\(X\)</span>, so that our model is <span class="math display">\[ p(X) = \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}} \]</span><br />
 Remember that the estimates <span class="math inline">\(\hat{\beta}_0\)</span> and <span class="math inline">\(\hat{\beta}_1\)</span> maximize the likelihood function <span class="math display">\[ L(\beta_0, \beta_1) = \prod_{i: y_i = 1} p(x_i) \prod_{i': y_{i'} = 0} (1 - p(x_{i'})) \]</span> for the observed data <span class="math inline">\(\{(x_i, y_i)\}_{i=1}^n\)</span>.</p>
 <ol style="list-style-type: lower-alpha">
@@ -218,6 +222,8 @@ table(glm.pred, Weekly$Direction)</code></pre>
 ## glm.pred Down  Up
 ##     Down   54  48
 ##     Up    430 557</code></pre>
+<pre class="r"><code>mean(glm.pred == Weekly$Direction)</code></pre>
+<pre><code>## [1] 0.5610652</code></pre>
 <p>This matrix tell us the misclassification rate on the training data. The diagonal/anti-diagonal of the matrix is showing how many correct/wrong predictions we make on the training data.</p>
 <ol start="3" style="list-style-type: lower-alpha">
 <li>Now fit the logistic regression model using a training data period from 1990 to 2008, with <code>Lag1</code>, <code>Lag2</code>, and <code>Lag3</code> as the only predictors. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).</li>
@@ -227,14 +233,7 @@ testSet = subset(Weekly, Year %in% 2009: 2010)
 # fit the logitics model
 glm.fit &lt;- glm(Direction ~ Lag1 + Lag2 + Lag3, data = traingSet, family = binomial)
 
-compute &lt;- function(fit, set) {
-  probs = predict(fit, newdata = set)
-  pred = rep(&quot;Down&quot;, length(probs))
-  pred[probs &gt; 0.5] = &quot;Up&quot;
-  table(pred, set$Direction)
-}
 # predict on the test set
-#compute(glm.fit, testSet)
 glm.probs = predict(glm.fit, testSet)
 glm.pred = rep(&quot;Down&quot;, length(glm.probs))
 glm.pred[glm.probs &gt; 0.5] = &quot;Up&quot;
@@ -243,26 +242,49 @@ table(glm.pred, testSet$Direction)</code></pre>
 ## glm.pred Down Up
 ##     Down   39 56
 ##     Up      4  5</code></pre>
+<pre class="r"><code>mean(glm.pred == testSet$Direction)</code></pre>
+<pre><code>## [1] 0.4230769</code></pre>
 <ol start="4" style="list-style-type: lower-alpha">
 <li>Repeat (c) using LDA. Use <code>library(MASS)</code> to work with the <code>lda()</code> command.</li>
 </ol>
 <pre class="r"><code>library(MASS)
+# fit the logitics model
 lda.fit = lda(Direction ~ Lag1 + Lag2 + Lag3, data = traingSet)
-#compute(lda.fit, testSet)
 
+# predict on the test set
 lda.pred = predict(lda.fit, testSet)
 lda.class = lda.pred$class
-#lda.pred = rep(&quot;Down&quot;, length(lda.probs))
-#lda.pred[lda.probs &gt; 0.5] = &quot;Up&quot;
 table(lda.class, testSet$Direction)</code></pre>
 <pre><code>##          
 ## lda.class Down Up
 ##      Down    8  9
 ##      Up     35 52</code></pre>
-<pre><code>(e) Repeat (c) using KNN with $K = 3$. Invoke `library(class)` to work with the `knn()` command. Set your seed to 2018 via `set.seed(2018)`.  
-(f) Which of the models from parts (c), (d), and (e) appears to provide the best results on this data?  
-(g) What is one scenario in which you might expect an LDA model to outperform a logistic regression model?  
-(h) What is one scenario in which you might expect a KNN model to outperform a logistic regression model?</code></pre>
+<pre class="r"><code>mean(lda.class == testSet$Direction)</code></pre>
+<pre><code>## [1] 0.5769231</code></pre>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Repeat (c) using KNN with <span class="math inline">\(K = 3\)</span>. Invoke <code>library(class)</code> to work with the <code>knn()</code> command. Set your seed to 2018 via <code>set.seed(2018)</code>.</li>
+</ol>
+<pre class="r"><code>library(class)
+set.seed(2018)
+train.X = traingSet[, c(&quot;Lag1&quot;, &quot;Lag2&quot;, &quot;Lag3&quot;)]
+test.X = testSet[, c(&quot;Lag1&quot;, &quot;Lag2&quot;, &quot;Lag3&quot;)]
+train.Direction = traingSet$Direction
+knn.pred = knn(train.X, test.X, train.Direction, k = 3)
+table(knn.pred, testSet$Direction)</code></pre>
+<pre><code>##         
+## knn.pred Down Up
+##     Down   19 27
+##     Up     24 34</code></pre>
+<pre class="r"><code>mean(knn.pred == testSet$Direction)</code></pre>
+<pre><code>## [1] 0.5096154</code></pre>
+<ol start="6" style="list-style-type: lower-alpha">
+<li><p>Which of the models from parts (c), (d), and (e) appears to provide the best results on this data?</p>
+<p>LDA has the best result of 0.5769231.</p></li>
+<li><p>What is one scenario in which you might expect an LDA model to outperform a logistic regression model?</p>
+<p>LDA assumes the observations are drawn from a Gaussian distribution with a common convariance matrix in each class, so if this assumeption is met, LDA will outperform a logistic regression model.</p></li>
+<li><p>What is one scenario in which you might expect a KNN model to outperform a logistic regression model?</p>
+<p>Logistic model can only generate a linear boundary, so when the decision boundary is highly non-linear, the KNN will outperform a logistic regression model.</p></li>
+</ol>
 <ol start="6" style="list-style-type: decimal">
 <li><p><strong>You may work in groups up to size 4 on this problem. If you do work in groups, write the names of all your group members on your problem set.</strong><br />
 In class, we fit a linear regression model to the NCAA data using the scores as a continuous response. <span class="math inline">\(y_i\)</span> represented the (possibly negative) margin of victory for the home team, and (including home court advantage) we modeled: <span class="math display">\[ y_i = \beta_0 h_i + \beta_{\text{home}(i)} - \beta_{\text{away}(i)} + \epsilon_i \]</span> One criticism of this model is that it may give teams too much credit for running up the score on their weaker opponents. Increasing oneâs margin of victory from 30 to 35 points is assigned the same importance as changing a 2-point loss to 3-point win.<br />
