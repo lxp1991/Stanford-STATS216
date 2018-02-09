@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Kenneth Tay" />
+<meta name="author" content="Xiangpeng Li" />
 
 
 <title>STATS 216: HW2</title>
@@ -119,7 +119,7 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">STATS 216: HW2</h1>
-<h4 class="author"><em>Kenneth Tay</em></h4>
+<h4 class="author"><em>Xiangpeng Li</em></h4>
 
 </div>
 
@@ -150,22 +150,19 @@ $(document).ready(function () {
 <li><p>Suppose that we use some statistical learning method to make a prediction for the response <span class="math inline">\(Y\)</span> for a particular value of the predictor <span class="math inline">\(X = x\)</span>. Carefully describe how we might estimate a confidence interval for (a) our prediction of <span class="math inline">\(Y\)</span> at <span class="math inline">\(x\)</span> and (b) the <span class="math inline">\(E(Y |X = x)\)</span>.</p>
 <ol style="list-style-type: lower-alpha">
 <li><p>we can use the bootstrap. We repeatly sample observations from the original data set and each time we can compute the estimate value <span class="math inline">\(\hat{\alpha}^{*B}\)</span>. After multiple times, we can get the mean of response and standard deviation. Based on these two parameters we can compute the confidence interval.</p></li>
-<li><p>We random pick observations from the original data set to do the bootstrap and record the response and that specific value of predictor. After repeatint this process multiple times, we can compute the <span class="math inline">\(E(Y |X = x)\)</span> besed on the records.</p></li>
+<li><p>We random pick observations from the original data set to do the bootstrap and record the response and that specific value of predictor. After repeatint this process multiple times, we can compute the <span class="math inline">\(E(Y |X = x)\)</span> based on the records.</p></li>
 </ol></li>
 <li><p>Logistic regression can give poor results when the two classes can be perfectly separated by a linear decision boundary. Consider just a logistic regression with a single predictor, <span class="math inline">\(X\)</span>, so that our model is <span class="math display">\[ p(X) = \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}} \]</span><br />
 Remember that the estimates <span class="math inline">\(\hat{\beta}_0\)</span> and <span class="math inline">\(\hat{\beta}_1\)</span> maximize the likelihood function <span class="math display">\[ L(\beta_0, \beta_1) = \prod_{i: y_i = 1} p(x_i) \prod_{i': y_{i'} = 0} (1 - p(x_{i'})) \]</span> for the observed data <span class="math inline">\(\{(x_i, y_i)\}_{i=1}^n\)</span>.</p>
 <ol style="list-style-type: lower-alpha">
 <li><p>Show that the likelihood function <span class="math inline">\(L(\beta_0, \beta_1)\)</span> is always strictly less than 1.</p>
-<p>Since <span class="math inline">\(p(x_i)\)</span> denotes the probability of the response of the <span class="math inline">\(i^{th}\)</span> observation, it can only be between 0 and 1. The likelihood function is the product of two cumulative product, and each value is between 0 and 1, so the final result will always in range of 0 and 1.</p></li>
-<li>Suppose that all of the <span class="math inline">\(x_i\)</span> corresponding to <span class="math inline">\(y_i = 0\)</span> are negative, and all of the other <span class="math inline">\(x_i\)</span> are positive. In that case, show that we can get <span class="math inline">\(L(\beta_0, \beta_1)\)</span> arbitrarily close to 1. That is, show that for any value <span class="math inline">\(a &lt; 1\)</span>, no matter how close to 1, you can always find values <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> for which <span class="math inline">\(L(\beta_0, \beta_1) &gt; a\)</span>.<br />
-Explain why this means that <span class="math inline">\(\hat{\beta}_0\)</span> and <span class="math inline">\(\hat{\beta}_1\)</span> are undefined.<br />
-</li>
-<li><p>Show that <span class="math inline">\(\hat{\beta}_0\)</span> and <span class="math inline">\(\hat{\beta}_1\)</span> are similarly undefined if there is <em>any</em> value <span class="math inline">\(c\)</span> for which every <span class="math inline">\(x_i\)</span> corresponding to <span class="math inline">\(y_i = 0\)</span> is less than <span class="math inline">\(c\)</span> and every other <span class="math inline">\(x_i\)</span> is larger than <span class="math inline">\(c\)</span>.</p></li>
-</ol>
-In fact, the same is true for multivariate logistic regression. Whenever there is a linear decision boundary that perfectly separates the two classes, the maximum likelihood logistic regression coefficients are undefined (but you donât have to prove this last fact).
-<ol start="4" style="list-style-type: lower-alpha">
-<li>Come up with your own data set of the form in (c) and fit a logistic regression to it in R. Plot your data, as well as the logistic regression fit <span class="math inline">\(\hat{p}(x)\)</span>.<br />
-You will probably get warning messages that the fit didnât converge, and that you have numerically 0 or 1 fitted probabilities. The first message usually signals that you have fit a logistic regression to perfectly separable classes.</li>
+<p>Since <span class="math inline">\(p(x_i)\)</span> denotes the probability of the response of the <span class="math inline">\(i^{th}\)</span> observation and can be calcuted through <span class="math inline">\(p(X) = \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}}\)</span>, no matter what value we give to <span class="math inline">\(X\)</span>, it can only be between 0 and 1. The likelihood function is the product of two cumulative product, and each value is between 0 and 1, so the final result will always in range of 0 and 1.</p></li>
+<li><p>Suppose that all of the <span class="math inline">\(x_i\)</span> corresponding to <span class="math inline">\(y_i = 0\)</span> are negative, and all of the other <span class="math inline">\(x_i\)</span> are positive. In that case, show that we can get <span class="math inline">\(L(\beta_0, \beta_1)\)</span> arbitrarily close to 1. That is, show that for any value <span class="math inline">\(a &lt; 1\)</span>, no matter how close to 1, you can always find values <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> for which <span class="math inline">\(L(\beta_0, \beta_1) &gt; a\)</span>.<br />
+Explain why this means that <span class="math inline">\(\hat{\beta}_0\)</span> and <span class="math inline">\(\hat{\beta}_1\)</span> are undefined.</p>
+<p>As we know from the question, <span class="math inline">\(P(Y = 0 |X &lt; 0) = 1, P(Y = 1 |X &gt; 0) = 1\)</span>. Ideally based on these equations the likelihood function should equal to 1. However according to Question (a), we know the likelihood function is always strictly less than 1, so we cannot get the best estimates for <span class="math inline">\(\hat{\beta}_0\)</span> and <span class="math inline">\(\hat{\beta}_1\)</span> which has the largest likelihood value. Because there are always better estimates for <span class="math inline">\(\hat{\beta}_0\)</span> and <span class="math inline">\(\hat{\beta}_1\)</span> to make the likelihood function apporoach to 1 but never reach 1.</p></li>
+<li><p>Show that <span class="math inline">\(\hat{\beta}_0\)</span> and <span class="math inline">\(\hat{\beta}_1\)</span> are similarly undefined if there is <em>any</em> value <span class="math inline">\(c\)</span> for which every <span class="math inline">\(x_i\)</span> corresponding to <span class="math inline">\(y_i = 0\)</span> is less than <span class="math inline">\(c\)</span> and every other <span class="math inline">\(x_i\)</span> is larger than <span class="math inline">\(c\)</span>. In fact, the same is true for multivariate logistic regression. Whenever there is a linear decision boundary that perfectly separates the two classes, the maximum likelihood logistic regression coefficients are undefined (but you don’t have to prove this last fact).</p></li>
+<li><p>Come up with your own data set of the form in (c) and fit a logistic regression to it in R. Plot your data, as well as the logistic regression fit <span class="math inline">\(\hat{p}(x)\)</span>.<br />
+You will probably get warning messages that the fit didnot converge, and that you have numerically 0 or 1 fitted probabilities. The first message usually signals that you have fit a logistic regression to perfectly separable classes.</p></li>
 </ol></li>
 <li><p>This question should be answered using the <code>Weekly</code> dataset, which is part of the <code>ISLR</code> package. This data is similar in nature to the <code>SMarket</code> data used in section 4.6 of our textbook, except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.</p>
 <ol style="list-style-type: lower-alpha">

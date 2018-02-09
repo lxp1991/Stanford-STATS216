@@ -1,6 +1,6 @@
 ---
 title: "STATS 216: HW2"
-author: "Kenneth Tay"
+author: "Xiangpeng Li"
 output: html_document
 ---
 
@@ -60,15 +60,33 @@ for the observed data $\{(x_i, y_i)\}_{i=1}^n$.
 
     (a) Show that the likelihood function $L(\beta_0, \beta_1)$ is always strictly less than 1.  
     
-        Since $p(x_i)$ denotes the probability of the response of the $i^{th}$ observation, it can only be between 0 and 1. The likelihood function is the product of two cumulative product, and each value is between 0 and 1, so the final result will always in range of 0 and 1.
+        Since $p(x_i)$ denotes the probability of the response of the $i^{th}$ observation and can be calcuted through $p(X) = \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}}$, no matter what value we give to $X$, it can only be between 0 and 1. The likelihood function is the product of two cumulative product, and each value is between 0 and 1, so the final result will always in range of 0 and 1.
         
     (b) Suppose that all of the $x_i$ corresponding to $y_i = 0$ are negative, and all of the other $x_i$ are positive. In that case, show that we can get $L(\beta_0, \beta_1)$ arbitrarily close to 1. That is, show that for any value $a < 1$, no matter how close to 1, you can always find values $\beta_0$ and $\beta_1$ for which $L(\beta_0, \beta_1) > a$.  
     Explain why this means that $\hat{\beta}_0$ and $\hat{\beta}_1$ are undefined.  
-    (c) Show that $\hat{\beta}_0$ and $\hat{\beta}_1$ are similarly undefined if there is *any* value $c$ for which every $x_i$ corresponding to $y_i = 0$ is less than $c$ and every other $x_i$ is larger than $c$. 
     
-    In fact, the same is true for multivariate logistic regression. Whenever there is a linear decision boundary that perfectly separates the two classes, the maximum likelihood logistic regression coefficients are undefined (but you don’t have to prove this last fact).  
+        As we know from the question, $P(Y = 0 |X < 0) = 1, P(Y = 1 |X > 0) = 1$. Ideally based on these equations the likelihood function should equal to 1. However according to Question (a), we know the likelihood function is always strictly less than 1, so we cannot get the best estimates for $\hat{\beta}_0$ and $\hat{\beta}_1$ which has the largest likelihood value. Because there are always better estimates for $\hat{\beta}_0$ and $\hat{\beta}_1$ to make the likelihood function apporoach to 1 but never reach 1.
+
+    (c) Show that $\hat{\beta}_0$ and $\hat{\beta}_1$ are similarly undefined if there is *any* value $c$ for which every $x_i$ corresponding to $y_i = 0$ is less than $c$ and every other $x_i$ is larger than $c$. In fact, the same is true for multivariate logistic regression. Whenever there is a linear decision boundary that perfectly separates the two classes, the maximum likelihood logistic regression coefficients are undefined (but you don't have to prove this last fact).  
+    
+        We can denote the probability as $P(Y = 0 |X < c) = 1, P(Y = 1 |X > c) = 1$. No matter what value $c$ has, it's still the same concept as Question (b), we can't get the best estimates for $\hat{\beta}_0$ and $\hat{\beta}_1$ which has the largest likelihood value because the likelihood function is always apporoaching to 1 but never reach 1.
+        
     (d) Come up with your own data set of the form in (c) and fit a logistic regression to it in R. Plot your data, as well as the logistic regression fit $\hat{p}(x)$.  
-    You will probably get warning messages that the fit didn’t converge, and that you have numerically 0 or 1 fitted probabilities. The first message usually signals that you have fit a logistic regression to perfectly separable classes.
+    You will probably get warning messages that the fit didnot converge, and that you have numerically 0 or 1 fitted probabilities. The first message usually signals that you have fit a logistic regression to perfectly separable classes.
+```{r}
+# predictor
+pred = runif(100, 0, 1)
+
+# response
+res = rep(0, 100)
+res[pred > 0.5] = 1
+
+plot(res ~ pred, col = "blue")
+fit <- glm(res ~ pred, family = binomial)
+summary(fit)
+```
+
+        
 
 5. This question should be answered using the `Weekly` dataset, which is part of the `ISLR` package. This data is similar in nature to the `SMarket` data used in section 4.6 of our textbook, except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.  
 
