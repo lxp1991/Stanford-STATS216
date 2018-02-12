@@ -177,22 +177,110 @@ mean(knn.pred == testSet$Direction)
 6. **You may work in groups up to size 4 on this problem. If you do work in groups, write the names of all your group members on your problem set.**  
 In class, we fit a linear regression model to the NCAA data using the scores as a continuous response. $y_i$ represented the (possibly negative) margin of victory for the home team, and (including home court advantage) we modeled:
 \[ y_i = \beta_0 h_i + \beta_{\text{home}(i)} - \beta_{\text{away}(i)} + \epsilon_i \]
-One criticism of this model is that it may give teams too much credit for running up the score on their weaker opponents. Increasing one’s margin of victory from 30 to 35 points is assigned the same importance as changing a 2-point loss to 3-point win.  
-To answer this criticism, we could change our model so that it only takes win-loss outcomes into account. Defining $z_i$ now as a 0/1 indicator of whether the home team won the game, the “logistic regression version” of our model for $P(z_i = 1)$ is of the form:
+One criticism of this model is that it may give teams too much credit for running up the score on their weaker opponents. Increasing one's margin of victory from 30 to 35 points is assigned the same importance as changing a 2-point loss to 3-point win.  
+To answer this criticism, we could change our model so that it only takes win-loss outcomes into account. Defining $z_i$ now as a 0/1 indicator of whether the home team won the game, the "logistic regression version" of our model for $P(z_i = 1)$ is of the form:
 \[ p(\text{home}(i), \text{away}(i), h_i) = \frac{e^{\beta_0 h_i + \beta_{\text{home}(i)} - \beta_{\text{away}(i)}}}{1 + e^{\beta_0 h_i + \beta_{\text{home}(i)} - \beta_{\text{away}(i)}}} \]
 Except for the home-team advantage term, this is a version of the famous *Bradley- Terry Model*, used in college football, chess, and elsewhere to compute automatic team rankings.  
 
-    (a) Fit the logistic regression model above to the data and examine the rankings. What happened to make both the team `saint-mary-saint-mary` and the team `st.-thomas-(tx)-celts` look so good?  
-    (b) Get rid of teams that played fewer than five games and refit the model. Make a rank table like the ones we made in class, where you compare the logistic regression rankings to the linear regression rankings, the AP Rankings, and the USA Today rankings. Which model seems to correspond better to the voters’ decisions, the linear regression or logistic regression?  
-    (c) When we ignore the actual value of $y_i$ and instead only use whether $y_i > 0$, we are discarding information, so we might expect our model standard errors to be larger relative to the effect sizes. If we use the linear regression model, for what fraction of teams are we confident ($p < 0.05$) that the team is better (or worse) than Stanford? For what fraction are we confident if we instead use the logistic regression model?  
+    (a) Fit the logistic regression model above to the data and examine the rankings. What happened to make both the team `saint-mary-saint-mary` and the team `st.-thomas-(tx)-celts` look so good? 
+```{r}
+games = read.csv("http://statweb.stanford.edu/~tibs/stats216/games.csv", as.is=T)
+teams = read.csv("http://statweb.stanford.edu/~tibs/stats216/teams.csv", as.is=T)
+all.teams = sort(unique(c(teams$team, games$home, games$away)))
+
+
+# the response is the only difference from the previous linear regression model
+y = with(games, homeScore - awayScore)
+y = ifelse(y > 0, 1, 0)
+
+X0 = as.data.frame(matrix(0, nrow(games), length(all.teams)))
+names(X0) = all.teams
+for(tm in all.teams) {
+  X0[[tm]] = 1*(games$home == tm) - 1*(games$away == tm)
+}
+# set stanford as baseline
+X = X0[, names(X0) != "stanford-cardinal"]
+
+#only consider regular games
+reg.season.games = which(games$gameType == "REG")
+
+fit = glm(y ~ 0 + ., data = X, subset = reg.season.games, family = binomial)
+
+# sort by the belta and display the first few records
+head(sort(fit$coefficients, decreasing = TRUE))
+
+# coefficients for st.-thomas-(tx)-celts and saint-mary-saint-mary
+coef = summary(fit)$coefficients
+head(coef[order(coef[, 4], decreasing = TRUE),])
+```
+
+if we look into `games` variable we can find out that both `saint-mary-saint-mary` and `st.-thomas-(tx)-celts` only played one game and they won that only game, so there are not enough training data to fit our model which will introduce a lot of bias. Also the large standard errors and p-values for these two team indicate that logistic regression model can't perfectly describe the relationship.
+        
+    (b) Get rid of teams that played fewer than five games and refit the model. Make a rank table like the ones we made in class, where you compare the logistic regression rankings to the linear regression rankings, the AP Rankings, and the USA Today rankings. Which model seems to correspond better to the voters' decisions, the linear regression or logistic regression?  
+```{r}
+# filter out teams that only play fewer than five games
+game.count = table(c(games$home, games$away))
+game.count = game.count[game.count >= 5]
+filtered.teams = all.teams[all.teams %in% c(names(game.count))]
+
+# set up the predictor as in question (a)
+X1 = as.data.frame(matrix(0, nrow(games), length(filtered.teams)))
+names(X1) = filtered.teams
+
+for(tm in filtered.teams) {
+  X1[[tm]] = 1*(games$home == tm) - 1*(games$away == tm)
+}
+
+X = X1[, names(X1) != "stanford-cardinal"]
+
+logistic = glm(y ~ 0 + ., data = X, subset = reg.season.games, family = binomial)
+
+y = with(games, homeScore - awayScore)
+
+# calculate linear model for comparsion
+linear = lm(y ~ 0 + ., data=X, subset=reg.season.games)
+
+
+logisticCoef = coef(summary(logistic))[, 1][paste("`", teams$team, "`", sep = "")]
+
+linearCoef = coef(summary(linear))[, 1][paste("`", teams$team, "`", sep = "")]
+
+
+rank.table = cbind(
+  "Logistic Fit Rank" = rank(-logisticCoef, ties="min"),
+  "Linear Fit Rank" = rank(-linearCoef, ties="min"),
+  "AP Rank"     = teams$apRank,
+  "USAT Rank"   = teams$usaTodayRank)
+
+# display table
+rank.table[order(teams$apRank, decreasing = FALSE)[1:25], ]
+
+```
+As we can see from the above table, logistic model rank look more similiar as AP rank and USAT rank than the linear rank. We can see that logistic regression in this sceanrio fits better than the linear model.
+    
+    (c) When we ignore the actual value of $y_i$ and instead only use whether $y_i > 0$, we are discarding information, so we might expect our model standard errors to be larger relative to the effect sizes. If we use the linear regression model, for what fraction of teams are we confident ($p < 0.05$) that the team is better (or worse) than Stanford? For what fraction are we confident if we instead use the logistic regression model?
+```{r}
+
+# logistic model
+a = coef(summary(logistic))
+length(a[a[, 4] < 0.05, 4]) / length(a[, 4])
+
+# linear model
+b = coef(summary(linear))
+length(b[b[, 4] < 0.05, 4]) / length(b[, 4])
+
+```
+
+Since we are using Stanford as baseline, all the estimate $\beta$ are relative to Stanford and the Stanford $\beta$ is 0 by definition. We can directly calculate the number of coeffieient which p-value is smaller than 0.05 in each model. The results are 0.68 and 0.93 for logistic model and linear model respectively.
+      
     (d) Each model makes a prediction about which team will win any given game. We can use ten-fold cross-validation to estimate the test error rate for these predictions and also try to determine whether one model is better than the other.  
     For each game in a given test set, there are four possible outcomes: both models are right in their prediction, both are wrong, only logistic regression is right, or only linear regression is right. Make a $2×2$ contingency table displaying how often each of these four outcomes occur, over all the test examples in all ten folds of cross-validation. Your table should look like:  
 <center>![](q5_table.png){width=40%}</center>
     
-    (e) We want to compare the two models to see if one is superior. $n_{11}$ and $n_{22}$ don’t tell us anything about which model is better, because they correspond to games where both models agree with each other. So to compare the two models, we need to look at $n_{12}$ and $n_{21}$. Let $D = n_{12} + n_{21}$ be the number of test games in which the two models *disagreed*.  
+    (e) We want to compare the two models to see if one is superior. $n_{11}$ and $n_{22}$ don't tell us anything about which model is better, because they correspond to games where both models agree with each other. So to compare the two models, we need to look at $n_{12}$ and $n_{21}$. Let $D = n_{12} + n_{21}$ be the number of test games in which the two models *disagreed*.  
     If both models are equally good and the test set games are independent, then every time the models disagree, each model is equally likely to be right. Then, conditional on $D$,  
-    \[ n_{12} ∼ \text{Binom}(D, 1/2)\]  
+    \[ n_{12} ~ \text{Binom}(D, 1/2)\]  
     For large $D$, the above binomial distribution is approximately normal with mean $D/2$ and variance $D/4$ (hence standard deviation $\sqrt{D}/2$). **You do not have to prove any of the above statements, just take them as given.**  
     Use the normal approximation to carry out a test of the hypothesis that both models are equally good at predicting games. What is the conclusion of your test?  
-    What you just did is the normal approximation to *McNemar’s Test*.
+    What you just did is the normal approximation to *McNemar's Test*.
     
