@@ -235,10 +235,10 @@ X = X1[, names(X1) != "stanford-cardinal"]
 
 logistic = glm(y ~ 0 + ., data = X, subset = reg.season.games, family = binomial)
 
-y = with(games, homeScore - awayScore)
+y1 = with(games, homeScore - awayScore)
 
 # calculate linear model for comparsion
-linear = lm(y ~ 0 + ., data=X, subset=reg.season.games)
+linear = lm(y1 ~ 0 + ., data=X, subset=reg.season.games)
 
 
 logisticCoef = coef(summary(logistic))[, 1][paste("`", teams$team, "`", sep = "")]
@@ -276,8 +276,55 @@ Since we are using Stanford as baseline, all the estimate $\beta$ are relative t
     (d) Each model makes a prediction about which team will win any given game. We can use ten-fold cross-validation to estimate the test error rate for these predictions and also try to determine whether one model is better than the other.  
     For each game in a given test set, there are four possible outcomes: both models are right in their prediction, both are wrong, only logistic regression is right, or only linear regression is right. Make a $2×2$ contingency table displaying how often each of these four outcomes occur, over all the test examples in all ten folds of cross-validation. Your table should look like:  
 <center>![](q5_table.png){width=40%}</center>
+```{r}
+X = X[sample(nrow(X)), ]
+folds = cut(seq(1, nrow(X)), breaks=10, labels=FALSE)
+n11 = 0
+n21 = 0
+n12 = 0
+n22 = 0
+# linear fit
+for(i in 1:10) {
+  testIndexes = which(folds == i, arr.ind=TRUE)
+  testData = X[testIndexes, ]
+  trainData = X[-testIndexes, ]
+  
+  
+  lm = lm(y[-testIndexes] ~ 0 + ., data = trainData, subset = reg.season.games)
+  lg = glm(y[-testIndexes] ~ 0 + .,
+                 data = trainData,
+                 subset = reg.season.games,
+                 family = binomial)
+  pred.lm = predict(lm, newdata = testData, subset = reg.season.games, type = "response")
+  pred.lg = predict(lg, newdata = testData, subset = reg.season.games, type = "response")
+  
+  # record the accuracy
+  for (j in i: length(testIndexes)) {
     
-    (e) We want to compare the two models to see if one is superior. $n_{11}$ and $n_{22}$ don't tell us anything about which model is better, because they correspond to games where both models agree with each other. So to compare the two models, we need to look at $n_{12}$ and $n_{21}$. Let $D = n_{12} + n_{21}$ be the number of test games in which the two models *disagreed*.  
+    # threshold for linear model for a winner team is 0
+    if (y1[testIndexes[j]] > 0 && pred.lm[j] > 0) {
+      n11 = n11 + 1
+    } else {
+      n21 = n21 + 1
+    }
+    
+    # threshold for logistic model for a winner team is 0.5
+    if (y[testIndexes[j]] > 0.5 && pred.lg[j] > 0.5) {
+      n12 = n12 + 1
+    } else {
+      n22 = n22 + 1
+    }
+  }
+}
+
+result = matrix(c(n11, n12, n21, n22), ncol = 2, byrow = TRUE)
+colnames(result) = c("logistic right", "logistic wrong")
+rownames(result) = c("linear right","linear wrong")
+result = as.table(result)
+result
+```
+    
+(e) We want to compare the two models to see if one is superior. $n_{11}$ and $n_{22}$ don't tell us anything about which model is better, because they correspond to games where both models agree with each other. So to compare the two models, we need to look at $n_{12}$ and $n_{21}$. Let $D = n_{12} + n_{21}$ be the number of test games in which the two models *disagreed*.  
     If both models are equally good and the test set games are independent, then every time the models disagree, each model is equally likely to be right. Then, conditional on $D$,  
     \[ n_{12} ~ \text{Binom}(D, 1/2)\]  
     For large $D$, the above binomial distribution is approximately normal with mean $D/2$ and variance $D/4$ (hence standard deviation $\sqrt{D}/2$). **You do not have to prove any of the above statements, just take them as given.**  
