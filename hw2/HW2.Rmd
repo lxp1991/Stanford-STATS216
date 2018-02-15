@@ -331,3 +331,5 @@ result
     Use the normal approximation to carry out a test of the hypothesis that both models are equally good at predicting games. What is the conclusion of your test?  
     What you just did is the normal approximation to *McNemar's Test*.
     
+        I'm a SCPD student, don't have enought time to do this, sorry :/
+    
