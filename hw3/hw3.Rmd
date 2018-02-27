@@ -1,0 +1,21 @@
+---
+title: "STATS 216: HW2"
+author: "Xiangpeng Li"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1.   
+    (a) Best subset will have the smallest training RSS. Best subset will search all the possibilities combinations and find the best ones which have the lowest training RSS.
+
+    (b) More information needs to provide. We need to do cross validation or fit on the test data to get the test RSS.
+    
+    (c)
+        i. true. As we move forward, we will add a new predictor with smallest RSS to the current set.
+        
+        ii. true. As we move forward, we will remove a new predictor with smallest RSS from the current set.
+        
+        iii. false. 
