@@ -18,4 +18,81 @@ knitr::opts_chunk$set(echo = TRUE)
         
         ii. true. As we move forward, we will remove a new predictor with smallest RSS from the current set.
         
-        iii. false. 
+        iii. false. They have different directions to choose predictors so they are not related.
+        
+        iv. false. The same reason as above.
+        
+        v. false. Subset selection picks are indenpendent at each step.
+        
+        
+        
+3.
+    (a)
+```{r}
+setwd("D:/One Drive/OneDrive/Document/Study/Stanford/Introduction to Statistical Learning/homework/hw3")
+load("body.RData")
+par(mfrow = c(1, 2), ask = TRUE)
+attach(Y)
+boxplot(Height ~ Gender, main = "Height")
+boxplot(Weight ~ Gender, main = "Weight")
+```
+
+On average, `1` has higher height and heavier weight, so we can assume `1` denotes male and `0` denotes female.
+    
+  (b)
+```{r}
+library(pls)
+attach(X)
+ 
+## set the seed to make your partition reproductible
+set.seed(1)
+traingIndex = sample(seq_len(nrow(X)), size = 307)
+
+traing = X[traingIndex, ]
+trainRes = Y[traingIndex, ]
+
+test = X[-traingIndex, ]
+testRes = Y[-traingIndex, ]
+
+pcr.fit = pcr(trainRes$Weight ~ ., data = traing, scale = TRUE, validation = "CV")
+
+plsr.fit = plsr(trainRes$Weight ~ ., data = traing, scale = TRUE, validation = "CV")
+```
+
+We choose to scale our variables because we can ensure all variables are on the same unit Otherwise the scale on which the variables are measured will have an effect on the final PCR model.
+
+  (c)
+```{r}
+summary(pcr.fit)
+validationplot(pcr.fit, val.type = "MSEP", main = "PCR MSEP")
+
+summary(plsr.fit)
+validationplot(plsr.fit, val.type = "MSEP", main = "PLSR MSEP")
+
+```
+
+The lowest cross-validation occurs when $M = 17$ for PCR model and $M = 8$ for PLS model. Also we can see for the same number of components these two model are using, PLS tends to have slightly smaller cross-validation error and higher percentage of variance explained. That's because PLS searches for directions that explain variance in both predictors and response whereas PCR only considers predictors. However, it is just slight different in the two model (95.2% for PCR and 96.07% for PLS using 4 components), PLS made an small improvement on PCR predictions.
+
+
+  (d)
+As we can see from above figures descriping MESP for two models, MSEPs drop significantly around 2-4 components, and don't have a noticable changes as we inscrease the number of components, we can see the same pattern for cross-validation error and % variance explained. So we choose $M = 4$ to make predictions.
+```{r}
+pcr.pred = predict(pcr.fit, newdata = test, ncomp = 4);
+
+mean((pcr.pred - testRes)^2)
+
+
+plsr.pred = predict(plsr.fit, newdata = test, ncomp = 4);
+
+mean((plsr.pred - testRes)^2)
+```
+
+The test MSE for PLS model is bit smaller than PCR test MSE which provide another evidence that PLS is slightly better than PCR in this scenario.
+
+  (e)
+```{r}
+library(glmnet)
+#lasso.fit = glmnet(traing, trainRes$Weight, alpha = 1)
+```
+
+
