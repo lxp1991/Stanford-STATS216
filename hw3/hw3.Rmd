@@ -24,12 +24,21 @@ knitr::opts_chunk$set(echo = TRUE)
         
         v. false. Subset selection picks are indenpendent at each step.
         
-        
+2.
+    (a) $\hat{g}$ will be a linear least square line across training data.
+    
+    (b) $\hat{g}$ will be a piecewise cubic polynomial with knots and continuous first derivative.
+    
+    (c) $\hat{g}$ will be a piecewise cubic polynomial with knots and continuous first and second derivatives.
+
+    (d) $\hat{g}$ will be a piecewise cubic polynomial with knots and continuous first, second and third derivatives.
+    
+    (e) $\hat{g}$ will interpolate the training observation.
         
 3.
     (a)
 ```{r}
-setwd("D:/One Drive/OneDrive/Document/Study/Stanford/Introduction to Statistical Learning/homework/hw3")
+#setwd("D:/One Drive/OneDrive/Document/Study/Stanford/Introduction to Statistical Learning/homework/hw3")
 load("body.RData")
 par(mfrow = c(1, 2), ask = TRUE)
 attach(Y)
@@ -48,15 +57,15 @@ attach(X)
 set.seed(1)
 traingIndex = sample(seq_len(nrow(X)), size = 307)
 
-traing = X[traingIndex, ]
+training = X[traingIndex, ]
 trainRes = Y[traingIndex, ]
 
 test = X[-traingIndex, ]
 testRes = Y[-traingIndex, ]
 
-pcr.fit = pcr(trainRes$Weight ~ ., data = traing, scale = TRUE, validation = "CV")
+pcr.fit = pcr(trainRes$Weight ~ ., data = training, scale = TRUE, validation = "CV")
 
-plsr.fit = plsr(trainRes$Weight ~ ., data = traing, scale = TRUE, validation = "CV")
+plsr.fit = plsr(trainRes$Weight ~ ., data = training, scale = TRUE, validation = "CV")
 ```
 
 We choose to scale our variables because we can ensure all variables are on the same unit Otherwise the scale on which the variables are measured will have an effect on the final PCR model.
@@ -90,9 +99,15 @@ mean((plsr.pred - testRes)^2)
 The test MSE for PLS model is bit smaller than PCR test MSE which provide another evidence that PLS is slightly better than PCR in this scenario.
 
   (e)
+PCR and PLS are not feature selection models, it's because each of the components will be using a linear combination of all features. A typical feature selection model is LASSO, so we can use LASSO to fit this data to improve interpretion.
 ```{r}
 library(glmnet)
-#lasso.fit = glmnet(traing, trainRes$Weight, alpha = 1)
+df = data.frame("Weight" = Y$Weight, X)
+x = model.matrix(Weight ~ ., df[traingIndex])[, -1]
+lasso.fit = glmnet(traing, trainRes$Weight, alpha = 1)
 ```
+
+(f)
+
 
 
