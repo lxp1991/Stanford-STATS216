@@ -1,5 +1,5 @@
 ---
-title: "STATS 216: HW2"
+title: "STATS 216: HW3"
 author: "Xiangpeng Li"
 output: html_document
 ---
@@ -38,9 +38,9 @@ knitr::opts_chunk$set(echo = TRUE)
 3.
     (a)
 ```{r}
-#setwd("D:/One Drive/OneDrive/Document/Study/Stanford/Introduction to Statistical Learning/homework/hw3")
+setwd("D:/One Drive/OneDrive/Document/Study/Stanford/Introduction to Statistical Learning/homework/hw3")
 load("body.RData")
-par(mfrow = c(1, 2), ask = TRUE)
+par(mfrow = c(1, 2))
 attach(Y)
 boxplot(Height ~ Gender, main = "Height")
 boxplot(Weight ~ Gender, main = "Weight")
@@ -51,7 +51,6 @@ On average, `1` has higher height and heavier weight, so we can assume `1` denot
   (b)
 ```{r}
 library(pls)
-attach(X)
  
 ## set the seed to make your partition reproductible
 set.seed(1)
@@ -84,6 +83,7 @@ The lowest cross-validation occurs when $M = 17$ for PCR model and $M = 8$ for P
 
 
   (d)
+  
 As we can see from above figures descriping MESP for two models, MSEPs drop significantly around 2-4 components, and don't have a noticable changes as we inscrease the number of components, we can see the same pattern for cross-validation error and % variance explained. So we choose $M = 4$ to make predictions.
 ```{r}
 pcr.pred = predict(pcr.fit, newdata = test, ncomp = 4);
@@ -99,15 +99,131 @@ mean((plsr.pred - testRes)^2)
 The test MSE for PLS model is bit smaller than PCR test MSE which provide another evidence that PLS is slightly better than PCR in this scenario.
 
   (e)
+  
 PCR and PLS are not feature selection models, it's because each of the components will be using a linear combination of all features. A typical feature selection model is LASSO, so we can use LASSO to fit this data to improve interpretion.
 ```{r}
 library(glmnet)
-df = data.frame("Weight" = Y$Weight, X)
-x = model.matrix(Weight ~ ., df[traingIndex])[, -1]
-lasso.fit = glmnet(traing, trainRes$Weight, alpha = 1)
+dataFrame = data.frame("Weight" = Y$Weight, X)
+x = model.matrix(Weight ~ ., dataFrame[traingIndex,])[, -1]
+xTest = model.matrix(Weight ~ ., dataFrame[-traingIndex,])[, -1]
+
+# fit the lasso model
+lasso.fit = glmnet(x, trainRes$Weight, alpha = 1)
+plot(lasso.fit)
+
+# use cross-validation to get the tuning parameter
+cv.out = cv.glmnet(x, trainRes$Weight, alpha = 1)
+bestlam = cv.out$lambda.min
+
+lasso.coef = predict(lasso.fit, s = bestlam, type = "coefficients")
+# coefficient estimates using cross-validation
+lasso.coef
 ```
 
 (f)
+```{r}
+# predictions using PCR
+pcr.pred = predict(pcr.fit, newdata = test, ncomp = 4);
+pcr.mse = mean((pcr.pred - testRes)^2)
 
 
+# predictions using PLS
+plsr.pred = predict(plsr.fit, newdata = test, ncomp = 4);
+plsr.mse = mean((plsr.pred - testRes)^2)
+
+# precitions using LASSO
+lasso.pred = predict(lasso.fit, s = bestlam, newx = xTest)
+lasso.mse = mean((lasso.pred - testRes)^2)
+
+dataFrame = data.frame(matrix(ncol = 3, nrow = 0))
+colnames(dataFrame) = c("PCR", "PLS", "LASSO")
+
+dataFrame[1, ] = c(pcr.mse, plsr.mse, lasso.mse)
+print(dataFrame)
+```
+
+Although LASSO only using 18 out of 21 features, it doesn't have a better predictions. Results show these three model have the similar performance. PLS has the lowest test MSE followed by LASSO, PCR has the highest test MSE.
+
+
+4.
+(a)
+```{r}
+h = function(x, z) {
+  if (x > z) (x - z)^3
+  else 0
+}
+```
+
+(b)
+```{r}
+hs = function(xs, z) {
+  sapply(xs, function (x) h(x, z))
+}
+```
+
+(c)
+```{r}
+splinebasis = function(xs, zs) {
+  row = length(xs);
+  col = length(zs) + 3;
+  res = matrix(nrow = row, ncol = col);
+  res[, 1] = xs;
+  res[, 2] = xs^2;
+  res[, 3] = xs^3;
+  for (i in 1:length(zs)) {
+    res[, i+3] = hs(xs, zs[i]);
+  }
+  res;
+}
+```
+
+(d)
+```{r}
+set.seed(1337)
+x = runif(100)
+y = sin(10 * x)
+```
+
+(e)
+```{r}
+knots = c(1/4, 2/4, 3/4)
+dataFrame = data.frame(y, splinebasis(x, knots))
+
+# fit
+lm.fit = lm(y ~ ., data = dataFrame)
+
+
+intvl = seq(0, 1, len = 100)
+nx = splinebasis(intvl, knots)
+test = data.frame(nx)
+
+lm.pred = predict(lm.fit, newdata = test)
+
+
+plot(x, y)
+curve(sin(10*x), 0, 1, add = TRUE, col = "red")
+lines(intvl, lm.pred, col = "green")
+```
+
+green line represents the fitted spline, each black circle represents the original points and red line represents the curve those points were generated from
+
+(f)
+```{r}
+par(mfrow = c(1, 2))
+for (k in 1:9) {
+  knots = 1:k
+  knots = knots / (k + 1)
+  dataFrame = data.frame(y, splinebasis(x, knots))
+  lm.fit = lm(y ~ ., data = dataFrame)
+  nx = splinebasis(intvl, knots)
+  test = data.frame(nx)
+  lm.pred = predict(lm.fit, newdata = test)
+  plot(x, y, main = paste(k, "knots"))
+  curve(sin(10*x), 0, 1, add = TRUE, col = "red")
+  lines(intvl, lm.pred, col = "green")
+}
+```
+
+(g)
+Theoretically as we increase the number of knots, the fitted curve will continually approximate to the true curve and eventually interpolate the true curve. But in this case when knots are greater than 4, we can barely see the difference between these two curves.
 
