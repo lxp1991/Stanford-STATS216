@@ -8,6 +8,18 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+1.
+
+(a)
+
+<center>![](1.jpg){width=50%}</center>
+
+
+(b)
+
+<center>![](2.jpg){width=50%}</center>
+
+
 2.   
 
 (a)
@@ -84,32 +96,27 @@ setwd("D:/One Drive/OneDrive/Document/Study/Stanford/Introduction to Statistical
 load("body.RData")
 set.seed(1)
 traingIndex = sample(seq_len(nrow(X)), size = 307)
-
+bag.mse = rep(0, 50)
+rf.mse = rep(0, 50)
+index = c(1: 50)
 training = X[traingIndex, ]
 trainRes = Y[traingIndex, ]
-
 test = X[-traingIndex, ]
 testRes = Y[-traingIndex, ]
 
+
 # fit the model
 library(randomForest)
-
-bag.mse = numeric(50)
-rf.mse = numeric(50)
-xvalue = c(1:50) * 10
-
-for (i in 1:50) {
-  bag.fit = randomForest(trainRes$Weight ~ ., data = training, ntree = i * 10, mtry = ncol(training), importance = TRUE)
-  rf.fit = randomForest(trainRes$Weight ~ ., data = training, ntree = i * 10, mtry = ncol(training) / 3, importance = TRUE)
-  
+for (i in index) {
+  bag.fit = randomForest(trainRes$Weight ~ ., data = training, ntree = i * 5, mtry = ncol(training), importance = TRUE)
+  rf.fit = randomForest(trainRes$Weight ~ ., data = training, ntree = i * 5, mtry = ncol(training) / 3, importance = TRUE)
   bag.pred = predict(bag.fit, newdata = test)
   rf.pred = predict(rf.fit, newdata = test)
-  
   bag.mse[i] = mean((bag.pred - testRes$Weight)^2)
   rf.mse[i] = mean((rf.pred - testRes$Weight)^2)
 }
-plot(xvalue, bag.mse, xlab = "Number of Trees", ylab = "MSE", col = "blue", pch = 19, type = "l", ylim = c(9.5, 17))
-points(xvalue, rf.mse, pch = 19, type = "l")
+plot(index * 5, rf.mse, xlab = "trees", ylab = "MSE", col = "blue", type = "l")
+lines(index * 5, bag.mse)
 ```
 
 (b)
